@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#0B0A06">
-<meta name="description" content="Bank Lambert : épargnez d'abord, empruntez le double. Seulement 10 % d'intérêt pour 2 semaines.">
+<meta name="description" content="Bank Lambert : épargnez d'abord, empruntez le double. Seulement 10 % d'intérêt pour 3 semaines, 15 % pour un mois.">
 <title>Bank Lambert</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -449,7 +449,7 @@ nav.n-bulle button.mid svg{border-radius:50%!important;padding:15px!important;ba
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
 {
-let MULT=2,RATE=10,MIN=1000;
+let MULT=2,RATE=10,MIN=1000;const DURS=[[3,10],[4,15]];const rateOf=w=>(DURS.find(d=>d[0]===w)||[0,RATE*w/2])[1];const dur=w=>w===4?'1 mois':w+' semaines';
 const SB_URL='https://eebqtggnmuzfrwgunpsa.supabase.co',SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlYnF0Z2dubXV6ZnJ3Z3VucHNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3NzI0NTQsImV4cCI6MjEwNzM0ODQ1NH0.tuCugIF_T1uVXXsWs96JwKJ1m_r-Pru477n7cP1sb1Y';
 const sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,storageKey:'bl-auth'}});
 const OPS=[{id:'mpesa',n:'M-Pesa',c:'#6B541F'},{id:'airtel',n:'Airtel Money',c:'#A3262A'},{id:'orange',n:'Orange Money',c:'#B4520A'}];
@@ -475,7 +475,7 @@ S.user={name:A.name,phone:A.phone,commune:A.commune,job:A.job,admin:OWNER};S.kyc
 if(A.kyc_status!=='aucun'){try{const r=await sb.storage.from('bl-kyc').createSignedUrl(UID+'/selfie.jpg',3600);S.photo=(r.data&&r.data.signedUrl)||''}catch(e){}}S.savings=+A.savings;S.spins=A.spins;S.bonus=+A.bonus;S.free=A.free_loan;S.won=+A.won;
 S.hist=(ops.data||[]).map(o=>({t:o.title,a:+o.amount,plus:o.plus,ts:Date.parse(o.at),d:fdate(o.at)}));
 const L=(lo.data||[]).find(l=>l.status==='en_cours'),R=(lo.data||[]).find(l=>l.status==='demande');
-S.loan=L?{id:L.id,amount:+L.amount,weeks:L.weeks,months:L.weeks/2,total:+L.total,inst:+L.inst,paid:+L.paid,n:L.n}:null;
+S.loan=L?{id:L.id,amount:+L.amount,weeks:L.weeks,months:[3,4].includes(L.weeks)?1:L.weeks/2,total:+L.total,inst:+L.inst,paid:+L.paid,n:L.n}:null;
 S.loanReq=R?{amount:+R.amount,weeks:R.weeks,total:+R.total,op:R.op}:null;S.pend=dp.data||[];S.rpend=rp.data||[];return true}
 async function loadAdmin(){const[ac,dp,lo,rp]=await Promise.all([sb.from('bl_accounts').select('*').order('created_at',{ascending:false}),sb.from('bl_deposits').select('*').eq('status','attente').order('created_at'),sb.from('bl_loans').select('*').in('status',['demande','en_cours']).order('created_at'),sb.from('bl_repays').select('*').eq('status','attente').order('created_at')]);
 const acc=ac.data||[],paths=[];acc.forEach(a=>{if(a.kyc_status!=='aucun')paths.push(a.uid+'/selfie.jpg',a.uid+'/piece.jpg')});const urls={};
@@ -485,7 +485,7 @@ let PREF={};try{PREF=JSON.parse(localStorage.getItem('bl-pref'))||{}}catch(e){}
 const setPref=(k,v)=>{PREF[k]=v;try{localStorage.setItem('bl-pref',JSON.stringify(PREF))}catch(e){}};
 const applyTheme=()=>{const t=PREF.theme||'dark';if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;else delete document.documentElement.dataset.theme};applyTheme();
 let CFG={};
-const ui={at:'val',ad:null,slide:0,dir:1,screen:'welcome',dep:10000,op:'mpesa',amt:null,weeks:2,rot:0,spinning:false,res:null,motif:MOTIFS[0],form:{},err:'',onboard:false,shown:0,reset:false};
+const ui={at:'val',ad:null,slide:0,dir:1,screen:'welcome',dep:10000,op:'mpesa',amt:null,weeks:3,rot:0,spinning:false,res:null,motif:MOTIFS[0],form:{},err:'',onboard:false,shown:0,reset:false};
 const num=n=>String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g,' ');
 const fc=n=>num(n)+' FC';
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -548,8 +548,8 @@ const ILLU=[IL_BANK,IL_CARDS,IL_COINS];
 const WAVES=`<svg class="waves" viewBox="0 0 340 180" preserveAspectRatio="none" aria-hidden="true">${Array.from({length:10},(_,k)=>`<path d="M-10 ${118+k*6}C80 ${58+k*8} 170 ${172-k*5} 350 ${66+k*7}" fill="none" stroke="#F5B700" stroke-opacity="${(.06+k*.03).toFixed(2)}"/>`).join('')}</svg>`;
 const SLIDES=[
 {k:'Bienvenue',t:'Prenez le contrôle de votre argent',p:"Épargnez d'abord, puis empruntez le double."},
-{k:'Emprunter',t:'Le double de votre épargne',p:"10&#8239;000&nbsp;FC déposés, 20&#8239;000&nbsp;FC à emprunter. Seulement 10&nbsp;% d'intérêt pour 2&nbsp;semaines."},
-{k:'Grandir',t:'Faites grandir votre commerce',p:"Remboursez sur 2 à 8 semaines et gagnez des remboursements à la roue."}];
+{k:'Emprunter',t:'Le double de votre épargne',p:"10&#8239;000&nbsp;FC déposés, 20&#8239;000&nbsp;FC à emprunter. 10&nbsp;% d'intérêt pour 3&nbsp;semaines, 15&nbsp;% pour un mois."},
+{k:'Grandir',t:'Faites grandir votre commerce',p:"Remboursez en 3 semaines ou en un mois et gagnez des remboursements à la roue."}];
 const CITY=[[0,150,34],[30,110,40],[74,165,30],[100,95,46],[150,140,34],[186,120,40],[230,160,28],[254,88,44],[302,130,36],[340,105,42],[380,150,30]].map(([x,y,w])=>`<rect x="${x}" y="${y}" width="${w}" height="${230-y}" rx="3"/>`).join('');
 const SEGS=[{l:'600',t:'amt',v:600,w:18},{l:'Dommage',t:'none',w:16},{l:'1 200',t:'amt',v:1200,w:18},{l:'1 600',t:'amt',v:1600,w:12},{l:'Dommage',t:'none',w:16},{l:'9 500',t:'amt',v:9500,w:4,big:1},{l:'Prêt soldé',t:'solde',w:2},{l:'600',t:'amt',v:600,w:14}];
 const SEGC=[['#3D2F0F','#FFD966'],['#151C17','#F5B700'],['#F5B700','#140E00'],['#594516','#FFFFFF'],['#151C17','#F5B700'],['#FFE08A','#1F1600'],['#E8501E','#FFFFFF'],['#594516','#FFFFFF']];
@@ -563,7 +563,7 @@ if(S.loan){const L=S.loan,rest=L.total-L.paid;if(g.t==='solde'){L.paid=L.total;S
 const v=Math.min(g.v,rest);L.paid+=v;S.won=(S.won||0)+v;addH('Roue · remboursement',v,0);if(L.paid>=L.total){S.loan=null;return`${fc(v)} remboursés : votre prêt est soldé !`}return`${fc(v)} remboursés automatiquement. Il reste ${fc(L.total-L.paid)}.`}
 if(g.t==='solde'){S.free=true;return'Votre prochain prêt sera soldé automatiquement par la roue.'}
 S.bonus=(S.bonus||0)+g.v;S.won=(S.won||0)+g.v;return`${fc(g.v)} gardés : ils rembourseront automatiquement votre prochain prêt.`}
-function optsHtml(){const a=ui.amt||0;return[2,4,6,8].map(w=>{const p=w/2,t=a+a*RATE/100*p,m=Math.ceil(t/p);return`<button class="opt" data-act="months" data-v="${w}" aria-pressed="${ui.weeks===w}"><span><b>${w} semaines</b><small>${p} paiement${p>1?'s':''} de ${fc(m)}</small></span><span class="ot"><small>Total</small><b>${fc(t)}</b></span></button>`}).join('')}
+function optsHtml(){const a=ui.amt||0;return DURS.map(([w,r])=>{const t=a+Math.ceil(a*r/100);return`<button class="opt" data-act="months" data-v="${w}" aria-pressed="${ui.weeks===w}"><span><b>${dur(w)}</b><small>${r} % d'intérêt · ${fc(Math.ceil(a*r/100))}</small></span><span class="ot"><small>Total</small><b>${fc(t)}</b></span></button>`}).join('')}
 function payBox(){const o=OPS.find(x=>x.id===ui.op),c=(CFG[ui.op]||{});
 if(!c.num)return`<div class="card" id="paybox"><b>Numéro ${o.n} à venir</b><p style="font-size:14px;color:var(--mute)">${OWNER?"Ajoutez votre numéro dans l'Espace administrateur pour que vos clients sachent où envoyer leur dépôt.":"Ce moyen de paiement n'est pas encore disponible. Choisissez-en un autre."}</p>${OWNER?`<button class="btn sm alt" data-go="admin">Ajouter mes numéros</button>`:''}</div>`;
 return`<div class="card paybox" id="paybox"><span class="lbl">Envoyez le montant par ${o.n} au :</span><div class="sp" style="align-items:center"><div><b class="num" style="font-size:24px;white-space:nowrap">${esc(c.num)}</b><small style="display:block;color:var(--mute)">${esc(c.name||'Bank Lambert')}</small></div><button class="btn sm alt" data-act="copy" data-v="${esc(c.num)}" style="width:auto;padding:0 16px">Copier</button></div>
@@ -634,7 +634,7 @@ ${ui.guest?`<div class="cat"><span class="ci">${ic('lock',20)}</span><div class=
 <div class="tot"><small>Épargne totale</small><div class="totrow"><span class="big3 num"${PREF.hide?'':` data-count="${S.savings}"`}>${PREF.hide?'•••••&nbsp;FC':fc(ui.shown)}</span><button class="eye" data-act="hide" aria-label="${PREF.hide?'Afficher':'Masquer'} les montants">${ic(PREF.hide?'eyeoff':'eye',20)}</button></div><span class="up">${ic('up',14)} ${hm(mo)} déposés ce mois</span></div>
 <div class="vcard">${WAVES}<div class="vtop"><div><small>Compte épargne</small><b>•••• ${ph}</b></div><span class="chipc"></span></div><div class="vbot"><div><small>Je peux emprunter</small><span class="num">${hm(ceil())}</span>${lk?`<small>${hm(lk)} bloqués en garantie</small>`:''}</div><span class="brandw">LAMBERT</span></div></div>
 <div class="qa2"><button data-go="deposit"><span class="ico">${ic('down',20)}</span>Déposer</button><button data-go="borrow"><span class="ico">${ic('coin',20)}</span>Emprunter</button><button data-go="repay"><span class="ico">${ic('up',20)}</span>Rembourser</button><button data-go="jeu"><span class="ico">${ic('wheel',20)}</span>Roue${sp?`<i class="bdg">${sp}</i>`:''}</button></div>
-${S.loanReq?`<div class="cat"><span class="ci">${ic('clock',20)}</span><span class="cm"><b>Demande de prêt en examen</b><small>${fc(S.loanReq.amount)} sur ${S.loanReq.weeks} semaines · ${opName(S.loanReq.op)}</small></span></div>`:''}
+${S.loanReq?`<div class="cat"><span class="ci">${ic('clock',20)}</span><span class="cm"><b>Demande de prêt en examen</b><small>${fc(S.loanReq.amount)} sur ${dur(S.loanReq.weeks)} · ${opName(S.loanReq.op)}</small></span></div>`:''}
 ${S.pend.map(p=>`<div class="cat"><span class="ci">${ic('clock',20)}</span><span class="cm"><b>Dépôt en vérification</b><small>${fc(+p.amount)} · ${opName(p.op)} · ${fdate(p.created_at)}</small></span></div>`).join('')}
 ${S.savings?`<div class="lvl"><div class="sp"><span>Prochain palier</span><b>${hm(st.n)}</b></div><div class="bar2"><i style="width:${st.pct}%"></i></div><small>Déposez encore ${hm(st.need)} pour y arriver.</small></div>`:''}
 ${OWNER?`<button class="cat" data-go="admin" style="cursor:pointer;text-align:left;font:inherit;color:inherit"><span class="ci">${ic('shield',20)}</span><span class="cm"><b>Espace administrateur</b><small>Clients et numéros mobile money</small></span>${ic('back',18).replace('<svg','<svg style="transform:rotate(180deg);color:var(--mute)"')}</button>`:''}
@@ -696,7 +696,7 @@ let body='';
 if(at==='val'){const lq=D.loans.filter(l=>l.status==='demande');
 body=`<div class="sec"><h2>Identités à vérifier</h2></div>${kq.length?kq.map(a=>`<div class="card" style="gap:10px"><div><b>${esc(a.name)}</b><small style="display:block;color:var(--mute)">${esc(a.phone)} · ${esc(a.commune)} · ${esc(a.job)}</small></div>${pics(a.uid)}<label class="field">Motif en cas de refus (facultatif)<input id="kn-${a.uid}" maxlength="200" placeholder="Ex. : photo floue"></label><div class="g2"><button class="btn sm" data-act="kyc" data-id="${a.uid}" data-ok="1">Identité valide</button><button class="btn sm alt" data-act="kyc" data-id="${a.uid}" data-ok="0">Refuser</button></div></div>`).join(''):'<div class="list empty">Aucune identité en attente.</div>'}
 <div class="sec"><h2>Dépôts à vérifier</h2></div>${D.dep.length?D.dep.map(d=>row(d.uid,fc(n(d.amount)),`${opName(d.op)} · ${fdate(d.created_at)}${d.ref?' · réf. '+esc(d.ref):''}<br>Vérifiez que l'argent est bien arrivé sur votre compte ${opName(d.op)}.`,d.id,'dep','Reçu, valider')).join(''):'<div class="list empty">Aucun dépôt en attente.</div>'}
-<div class="sec"><h2>Demandes de prêt</h2></div>${lq.length?lq.map(l=>{const a=who(l.uid);return row(l.uid,fc(n(l.amount)),`${l.weeks} semaines · à rembourser ${fc(n(l.total))} · ${esc(l.motif)}<br><b style="color:${a.kyc_status==='valide'?'var(--lk)':'var(--err)'}">${KL[a.kyc_status]||''}</b>${pics(l.uid)}${a.kyc_status==='valide'?`Envoyez l'argent sur son ${opName(l.op)} (${esc(a.phone)}), puis validez.`:'Vérifiez d\'abord son identité plus haut avant d\'accepter.'}`,l.id,'loan',"Argent envoyé")}).join(''):'<div class="list empty">Aucune demande en attente.</div>'}
+<div class="sec"><h2>Demandes de prêt</h2></div>${lq.length?lq.map(l=>{const a=who(l.uid);return row(l.uid,fc(n(l.amount)),`${dur(l.weeks)} · à rembourser ${fc(n(l.total))} · ${esc(l.motif)}<br><b style="color:${a.kyc_status==='valide'?'var(--lk)':'var(--err)'}">${KL[a.kyc_status]||''}</b>${pics(l.uid)}${a.kyc_status==='valide'?`Envoyez l'argent sur son ${opName(l.op)} (${esc(a.phone)}), puis validez.`:'Vérifiez d\'abord son identité plus haut avant d\'accepter.'}`,l.id,'loan',"Argent envoyé")}).join(''):'<div class="list empty">Aucune demande en attente.</div>'}
 <div class="sec"><h2>Remboursements à vérifier</h2></div>${D.rep.length?D.rep.map(r=>row(r.uid,fc(n(r.amount)),`${opName(r.op)} · ${fdate(r.created_at)}${r.ref?' · réf. '+esc(r.ref):''}`,r.id,'rep','Reçu, valider')).join(''):'<div class="list empty">Aucun remboursement en attente.</div>'}`}
 else if(at==='cli'){const tot=D.acc.reduce((a,c)=>a+n(c.savings),0),act=D.loans.filter(l=>l.status==='en_cours'),enc=act.reduce((a,l)=>a+n(l.total)-n(l.paid),0);
 body=`<div class="g2"><div class="stat"><small>Clients</small><b class="num">${D.acc.length}</b></div><div class="stat"><small>Épargne totale</small><b class="num">${fc(tot)}</b></div><div class="stat"><small>Prêts en cours</small><b class="num">${act.length}</b></div><div class="stat"><small>Reste à encaisser</small><b class="num">${fc(enc)}</b></div></div>
@@ -718,7 +718,7 @@ profile:()=>`<section class="scr nav-pad">${top('Mon profil','home')}
 <div class="pcard"><span class="pav">${S.photo?`<img src="${esc(S.photo)}" alt="Votre photo">`:esc(S.user.name[0].toUpperCase())}</span><h2>${esc(S.user.name)}</h2><p style="color:var(--mute);font-size:14px">${esc(S.user.phone)} · ${esc(S.user.commune)} · ${esc(S.user.job)}</p>${S.user.admin?`<span class="okp" style="margin:4px 0 0">Compte administrateur</span>`:''}<span class="okp" style="margin:4px 0 0${S.kyc==='valide'?'':';color:var(--mute);background:var(--soft)'}">${{valide:'Identité vérifiée',attente:'Identité en cours de vérification',refuse:'Identité refusée : renvoyez vos photos',aucun:'Identité à fournir pour emprunter'}[S.kyc||'aucun']}</span>
 <div class="prow"><div class="pchip"><span class="ico">${ic('coin',20)}</span><div><b>${fc(S.savings)}</b><small>Épargne</small></div></div><div class="pchip"><span class="ico y">${ic('up',20)}</span><div><b>${fc(ceil())}</b><small>Plafond</small></div></div></div></div>
 ${OWNER?`<button class="btn" data-go="admin">Espace administrateur</button>`:''}
-<div class="card"><b>Les règles Bank Lambert</b>${[['up',`Vous empruntez jusqu'à ${MULT} fois votre épargne.`],['clock',`Seulement ${RATE} % d'intérêt par période de 2 semaines, sur 2 à 8 semaines.`],['lock',"L'épargne qui garantit un prêt est bloquée jusqu'à son remboursement."],['shield','Un seul prêt à la fois.']].map(r=>`<div style="display:flex;gap:10px;font-size:15px;color:var(--mute)">${ic(r[0],20)}<span>${r[1]}</span></div>`).join('')}</div>
+<div class="card"><b>Les règles Bank Lambert</b>${[['up',`Vous empruntez jusqu'à ${MULT} fois votre épargne.`],['clock',`Seulement 10 % d'intérêt pour 3 semaines, ou 15 % pour un mois.`],['lock',"L'épargne qui garantit un prêt est bloquée jusqu'à son remboursement."],['shield','Un seul prêt à la fois.']].map(r=>`<div style="display:flex;gap:10px;font-size:15px;color:var(--mute)">${ic(r[0],20)}<span>${r[1]}</span></div>`).join('')}</div>
 <div class="card"><b>Apparence</b><div class="seg">${[['dark','Sombre'],['light','Clair'],['auto','Auto']].map(t=>`<button data-act="theme" data-v="${t[0]}" aria-selected="${(PREF.theme||'dark')===t[0]}">${t[1]}</button>`).join('')}</div></div>
 <div class="card"><b>Style de la barre du bas</b><div class="seg">${[['bulle','Bulle'],['pilule','Pilule'],['ligne','Ligne']].map(t=>`<button data-act="navstyle" data-v="${t[0]}" aria-selected="${(PREF.nav||'bulle')===t[0]}">${t[1]}</button>`).join('')}</div><p style="font-size:13px;color:var(--mute)">Bulle : bouton Accueil surélevé. Pilule : barre flottante arrondie. Ligne : barre plate avec un trait sur l'onglet actif.</p></div>
 <p class="fine">Institution de microfinance agréée par la Banque Centrale du Congo — numéro d'agrément à compléter.</p>
@@ -727,13 +727,13 @@ ${UID?`<button class="btn alt" data-act="logout">Se déconnecter</button>`:`<but
 };
 
 function loanCard(){const L=S.loan,pct=Math.round(L.paid/L.total*100);return`<div class="card loanc">
-<div class="sp"><span style="font-size:14px;color:var(--mute)">Prêt en cours · ${fc(L.amount)} sur ${L.weeks} semaines</span></div>
+<div class="sp"><span style="font-size:14px;color:var(--mute)">Prêt en cours · ${fc(L.amount)} sur ${dur(L.weeks)}</span></div>
 <div class="sp" style="align-items:center"><div><small style="color:var(--mute);font-size:13px">Reste à rembourser</small><div class="num" style="font-size:26px;white-space:nowrap">${fc(L.total-L.paid)}</div></div><button class="btn sm" data-go="repay" style="width:auto;padding:0 18px">Rembourser</button></div>
 <div class="bar" style="background:var(--soft)"><i style="width:${Math.max(3,pct)}%;background:var(--b2)"></i></div>
 <span style="font-size:13px;color:var(--mute)">${L.n} échéance${L.n>1?'s':''} payée${L.n>1?'s':''} sur ${L.months}</span></div>`}
-function calc(){const p=ui.weeks/2,it=ui.amt*RATE/100*p,t=ui.amt+it;return{p,it,t,m:Math.ceil(t/p)}}
+function calc(){const r=rateOf(ui.weeks),it=Math.ceil(ui.amt*r/100),t=ui.amt+it;return{p:1,r,it,t,m:t}}
 function sumHtml(){const k=calc();return`<div class="sp"><small>${k.p>1?`${k.p} paiements de`:'Un paiement de'}</small><span class="num acc-t" style="font-size:28px">${fc(k.m)}</span></div><div style="height:1px;background:rgba(255,255,255,.14)"></div>
-<div class="sp m"><span>Intérêts (${RATE} % / 2 semaines)</span><span style="color:#F6F3EC">${fc(k.it)}</span></div>
+<div class="sp m"><span>Intérêts (${k.r} % · ${dur(ui.weeks)})</span><span style="color:#F6F3EC">${fc(k.it)}</span></div>
 <div class="sp m"><span>Total à rembourser</span><span style="color:#F6F3EC">${fc(k.t)}</span></div>
 <div class="sp m"><span>Épargne bloquée en garantie</span><span style="color:#F6F3EC">${fc(Math.min(S.savings,ui.amt/MULT))}</span></div>`}
 
