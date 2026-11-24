@@ -1,0 +1,19 @@
+{
+  "name": "Bank Lambert",
+  "short_name": "Bank Lambert",
+  "description": "Épargnez d'abord, empruntez le double. 10 % pour 3 semaines, 15 % pour un mois.",
+  "lang": "fr",
+  "start_url": "/?source=app",
+  "scope": "/",
+  "id": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#050806",
+  "theme_color": "#050806",
+  "categories": ["finance"],
+  "icons": [
+    {"src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
