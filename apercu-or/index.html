@@ -479,20 +479,9 @@ body.is-late .app{box-shadow:inset 0 0 0 3px #FF3B30;animation:edge 1.2s ease-in
 .instl{all:unset;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin:6px auto 0;padding:10px 18px;border-radius:999px;border:1px solid var(--line);font-family:inherit;font-weight:600;font-size:14px;color:var(--ink)}
 .instb{position:relative}.instb .x{all:unset;cursor:pointer;position:absolute;top:4px;right:10px;font-size:18px;color:var(--mute)}
 
-/* ouverture : logo arrondi, sans lumières, étapes expliquées */
-.splash{background:#0B0A06!important}
+/* ouverture : animation d'origine, sans halo ni lumière */
 .splash .glow{display:none!important}
-.sp-in{gap:18px}
-.sp-tile{width:132px;height:132px;border-radius:36px;background:#9A6E00;display:grid;place-items:center;animation:tile .6s var(--e) both}
-@keyframes tile{from{opacity:0;transform:scale(.6)}}
-.splash .big{width:70px!important;height:79px!important;fill:#fff!important;filter:none!important}
-.big .lr{animation-delay:.25s}
-.wm span:first-child{animation-delay:.9s}.wm span:last-child{animation-delay:1s}
-.sp-steps{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:10px;min-width:240px}
-.sp-steps li{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:16px;background:#101510;border:1px solid #2A2516;color:#F6F3EC;font:600 15px 'Plus Jakarta Sans',sans-serif;opacity:0;animation:stepin .5s var(--e) forwards;animation-delay:calc(1.6s + var(--k)*.65s)}
-.sp-steps b{width:28px;height:28px;flex:none;border-radius:10px;background:#9A6E00;color:#fff;display:grid;place-items:center;font-size:14px}
-@keyframes stepin{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
-.splash .tg{display:none}
+.splash .big{filter:none!important}
 </style>
 </head>
 <body>
@@ -909,8 +898,8 @@ async function refresh(){if(!UID||ui.guest||document.hidden||document.querySelec
 setInterval(refresh,15000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
 render();
 (()=>{const rm=matchMedia('(prefers-reduced-motion: reduce)').matches,d=document.createElement('div');d.className='splash';d.setAttribute('role','img');d.setAttribute('aria-label','Bank Lambert');
-d.innerHTML=`<div class="sp-in"><div class="sp-tile">${LOGO('big')}</div><div class="wm"><span>Bank</span><span>Lambert</span></div><ol class="sp-steps"><li style="--k:0"><b>1</b>Épargnez</li><li style="--k:1"><b>2</b>Empruntez le double</li><li style="--k:2"><b>3</b>Remboursez et grandissez</li></ol></div>`;document.body.appendChild(d);
-const end=()=>{if(d.dataset.out)return;d.dataset.out=1;d.classList.add('out');ui.slide=0;ui.splashDone=true;if(ui.screen==='welcome')render(true);setTimeout(()=>d.remove(),600)};d.onclick=end;setTimeout(end,rm?800:4600)})();
+d.innerHTML=`<div class="sp-in">${LOGO('big')}<div class="wm"><span>Bank</span><span>Lambert</span></div><p class="tg">Épargnez. Empruntez. Grandissez.</p></div>`;document.body.appendChild(d);
+const end=()=>{if(d.dataset.out)return;d.dataset.out=1;d.classList.add('out');ui.slide=0;ui.splashDone=true;if(ui.screen==='welcome')render(true);setTimeout(()=>d.remove(),600)};d.onclick=end;setTimeout(end,rm?800:3000)})();
 (async()=>{try{await loadCfg()}catch(e){}
 try{const{data:{session}}=await sb.auth.getSession();if(session){UID=session.user.id;const ok=await load();if(ok){if(ui.screen==='welcome'){ui.autoEnter=true;ui.shown=0}}else if(ui.screen==='welcome'){ui.screen='signup'}}}catch(e){}
 render(true)})();
