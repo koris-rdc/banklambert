@@ -575,6 +575,22 @@ nav.n-rp button[aria-current=page]{color:light-dark(#0A422C,#fff)!important;box-
 .adcard{background:linear-gradient(135deg,#136B47,#092F22)!important}
 .adban{background:light-dark(#E6F3EC,#111C17)!important;border-color:light-dark(#C6E4D3,rgba(102,175,124,.22))!important}
 .adban svg{color:#8ECE9D!important}
+
+/* ouverture v3 : fond vert sombre, logo et textes blancs, feuilles animées plus longtemps */
+.splash{background:radial-gradient(70% 55% at 50% 44%,#136B47 0%,#0A422C 45%,#050A08 100%)!important;color:#fff!important}
+.splash .big{width:150px!important;height:169px!important;fill:#fff!important;filter:none!important;overflow:visible}
+.splash .big .lr{transform-box:fill-box;transform-origin:center;animation:ring2 1.1s cubic-bezier(.22,1,.36,1) both}
+.splash .big .lp{transform-box:fill-box;transform-origin:50% 100%;
+ animation:leaf2 .9s cubic-bezier(.34,1.56,.64,1) both,sway .8s ease-in-out 4 alternate,gather .8s cubic-bezier(.22,1,.36,1) forwards;
+ animation-delay:calc(.7s + var(--i)*.18s),calc(2.2s + var(--i)*.07s),4.05s}
+@keyframes ring2{0%{opacity:0;transform:scale(.4) rotate(-90deg)}60%{opacity:1}100%{opacity:1;transform:none}}
+@keyframes leaf2{0%{opacity:0;transform:translateY(35%) scale(.15) rotate(-30deg)}100%{opacity:1;transform:none}}
+@keyframes sway{0%{transform:rotate(-7deg)}100%{transform:rotate(7deg)}}
+@keyframes gather{0%{transform:rotate(0) scale(1)}45%{transform:scale(.78)}100%{transform:scale(1)}}
+.splash .wm{color:#fff!important;font-size:38px}
+.splash .wm span:first-child{animation-delay:3.3s!important}.splash .wm span:last-child{animation-delay:3.45s!important}
+.splash .tg{color:rgba(255,255,255,.85)!important;animation-delay:3.9s!important}
+@media (prefers-reduced-motion:reduce){.splash .big .lp,.splash .big .lr{animation:none}}
 </style>
 </head>
 <body>
@@ -1027,7 +1043,7 @@ setInterval(refresh,15000);document.addEventListener('visibilitychange',()=>{if(
 render();
 (()=>{const rm=matchMedia('(prefers-reduced-motion: reduce)').matches,d=document.createElement('div');d.className='splash';d.setAttribute('role','img');d.setAttribute('aria-label','Bank Lambert');
 d.innerHTML=`<div class="sp-in">${LOGO('big')}<div class="wm"><span>Bank</span><span>Lambert</span></div><p class="tg">Épargnez. Empruntez. Grandissez.</p></div>`;document.body.appendChild(d);
-const end=()=>{if(d.dataset.out)return;d.dataset.out=1;d.classList.add('out');ui.slide=0;ui.splashDone=true;if(ui.screen==='welcome')render(true);setTimeout(()=>d.remove(),600)};d.onclick=end;setTimeout(end,rm?800:3000)})();
+const end=()=>{if(d.dataset.out)return;d.dataset.out=1;d.classList.add('out');ui.slide=0;ui.splashDone=true;if(ui.screen==='welcome')render(true);setTimeout(()=>d.remove(),600)};d.onclick=end;setTimeout(end,rm?800:5600)})();
 (async()=>{try{await loadCfg()}catch(e){}
 try{const{data:{session}}=await sb.auth.getSession();if(session){UID=session.user.id;const ok=await load();if(ok){if(ui.screen==='welcome'){ui.autoEnter=true;ui.shown=0}}else if(ui.screen==='welcome'){ui.screen='signup'}}}catch(e){}
 render(true)})();
