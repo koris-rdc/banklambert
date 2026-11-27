@@ -11,7 +11,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Bank Lambert">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="description" content="Bank Lambert : épargnez d'abord, empruntez le double. Seulement 10 % d'intérêt pour 3 semaines, 15 % pour un mois.">
+<meta name="description" content="Bank Lambert : épargnez d'abord, empruntez jusqu'à 3 fois votre épargne. Seulement 10 % d'intérêt pour 3 semaines, 15 % pour un mois.">
 <title>Bank Lambert</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -591,6 +591,18 @@ nav.n-rp button[aria-current=page]{color:light-dark(#0A422C,#fff)!important;box-
 .splash .wm span:first-child{animation-delay:3.3s!important}.splash .wm span:last-child{animation-delay:3.45s!important}
 .splash .tg{color:rgba(255,255,255,.85)!important;animation-delay:3.9s!important}
 @media (prefers-reduced-motion:reduce){.splash .big .lp,.splash .big .lr{animation:none}}
+
+/* roue en plein écran */
+.gboard{background:none!important;border:0!important;box-shadow:none!important;border-radius:0!important;margin:0 -20px;padding:52px 0 24px!important}.gboard .coin-pill{left:20px!important;top:4px!important}
+.gboard .wheelbox{width:min(100vw,440px)!important;max-width:none}
+/* capture du dépôt */
+.proof{display:flex;flex-direction:column;gap:6px;padding:14px;border-radius:18px;border:2px dashed var(--line);background:var(--soft)}
+.proof b{font-size:15px}.proof small{font-size:13px;color:var(--mute)}.proof .pst{color:var(--lk);font-weight:700}
+.proof img{max-width:100%;max-height:220px;object-fit:contain;border-radius:12px;align-self:flex-start}
+.proof .kbtns{display:flex}.proof .kb{flex:1;min-height:44px;display:grid;place-items:center;border-radius:12px;background:var(--card);border:1px solid var(--line);font-size:14px;font-weight:700;cursor:pointer}
+/* admin : montant bien dans la case */
+.adpanel .card .sp{gap:12px}.adpanel .card .sp>div{flex:1;min-width:0}.adpanel .card .sp>b{flex:none;font-size:17px}
+.adpanel .card{overflow:hidden}
 </style>
 </head>
 <body>
@@ -598,7 +610,7 @@ nav.n-rp button[aria-current=page]{color:light-dark(#0A422C,#fff)!important;box-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
 {
-let MULT=2,RATE=10,MIN=1000;const DURS=[[3,10],[4,15]];const rateOf=w=>(DURS.find(d=>d[0]===w)||[0,RATE*w/2])[1];const dur=w=>w===4?'1 mois':w+' semaines';
+let MULT=3,RATE=10,MIN=1000;const DURS=[[3,10],[4,15]];const rateOf=w=>(DURS.find(d=>d[0]===w)||[0,RATE*w/2])[1];const dur=w=>w===4?'1 mois':w+' semaines';
 const SB_URL='https://eebqtggnmuzfrwgunpsa.supabase.co',SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlYnF0Z2dubXV6ZnJ3Z3VucHNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3NzI0NTQsImV4cCI6MjEwNzM0ODQ1NH0.tuCugIF_T1uVXXsWs96JwKJ1m_r-Pru477n7cP1sb1Y';
 const sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,storageKey:'bl-auth'}});
 const OPS=[{id:'mpesa',n:'M-Pesa',c:'#1F6B48'},{id:'airtel',n:'Airtel Money',c:'#26A369'},{id:'orange',n:'Orange Money',c:'#249A63'}];
@@ -629,7 +641,8 @@ S.loanReq=R?{amount:+R.amount,weeks:R.weeks,total:+R.total,op:R.op}:null;const D
 async function loadAdmin(){const[ac,dp,lo,rp]=await Promise.all([sb.from('bl_accounts').select('*').order('created_at',{ascending:false}),sb.from('bl_deposits').select('*').order('created_at',{ascending:false}).limit(300),sb.from('bl_loans').select('*').in('status',['demande','en_cours']).order('created_at'),sb.from('bl_repays').select('*').eq('status','attente').order('created_at')]);
 const acc=ac.data||[],paths=[];acc.forEach(a=>paths.push(a.uid+'/selfie.jpg',a.uid+'/piece.jpg'));const urls={};
 if(paths.length){try{const r=await sb.storage.from('bl-kyc').createSignedUrls(paths,3600);(r.data||[]).forEach(x=>{if(x.signedUrl)urls[x.path]=x.signedUrl})}catch(e){}}
-const DA=dp.data||[];ui.ad={acc,urls,depAll:DA,dep:DA.filter(d=>d.status==='attente').reverse(),loans:lo.data||[],rep:rp.data||[]};ui.adErr=ac.error?errMsg(ac.error):''}
+const DA=dp.data||[];const pp=DA.filter(d=>d.status==='attente'&&d.proof).map(d=>d.proof);if(pp.length){try{const r=await sb.storage.from('bl-proofs').createSignedUrls(pp,3600);(r.data||[]).forEach(x=>{if(x.signedUrl)urls['proof:'+x.path]=x.signedUrl})}catch(e){}}
+ui.ad={acc,urls,depAll:DA,dep:DA.filter(d=>d.status==='attente').reverse(),loans:lo.data||[],rep:rp.data||[]};ui.adErr=ac.error?errMsg(ac.error):''}
 let PREF={};try{PREF=JSON.parse(localStorage.getItem('bl-pref'))||{}}catch(e){}
 const setPref=(k,v)=>{PREF[k]=v;try{localStorage.setItem('bl-pref',JSON.stringify(PREF))}catch(e){}};
 const applyTheme=()=>{const t=PREF.theme||'dark';if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;else delete document.documentElement.dataset.theme};applyTheme();
@@ -696,18 +709,18 @@ ${[[52,90,3],[96,60,2],[292,120,2.5],[210,40,2]].map(([x,y,r])=>`<circle cx="${x
 const ILLU=[IL_BANK,IL_CARDS,IL_COINS];
 const WAVES=`<svg class="waves" viewBox="0 0 340 180" preserveAspectRatio="none" aria-hidden="true">${Array.from({length:10},(_,k)=>`<path d="M-10 ${118+k*6}C80 ${58+k*8} 170 ${172-k*5} 350 ${66+k*7}" fill="none" stroke="#3DD18C" stroke-opacity="${(.06+k*.03).toFixed(2)}"/>`).join('')}</svg>`;
 const SLIDES=[
-{k:'Bienvenue',t:'Prenez le contrôle de votre argent',p:"Épargnez d'abord, puis empruntez le double."},
-{k:'Emprunter',t:'Le double de votre épargne',p:"10&#8239;000&nbsp;FC déposés, 20&#8239;000&nbsp;FC à emprunter. 10&nbsp;% d'intérêt pour 3&nbsp;semaines, 15&nbsp;% pour un mois."},
+{k:'Bienvenue',t:'Prenez le contrôle de votre argent',p:"Épargnez d'abord, puis empruntez jusqu'à 3 fois votre épargne."},
+{k:'Emprunter',t:'Le triple de votre épargne',p:"10&#8239;000&nbsp;FC déposés, 30&#8239;000&nbsp;FC à emprunter. 10&nbsp;% d'intérêt pour 3&nbsp;semaines, 15&nbsp;% pour un mois."},
 {k:'Grandir',t:'Faites grandir votre commerce',p:"Remboursez en 3 semaines ou en un mois et gagnez des remboursements à la roue."}];
 const CITY=[[0,150,34],[30,110,40],[74,165,30],[100,95,46],[150,140,34],[186,120,40],[230,160,28],[254,88,44],[302,130,36],[340,105,42],[380,150,30]].map(([x,y,w])=>`<rect x="${x}" y="${y}" width="${w}" height="${230-y}" rx="3"/>`).join('');
-const SEGS=[{l:'600',t:'amt',v:600,w:18},{l:'Dommage',t:'none',w:16},{l:'1 200',t:'amt',v:1200,w:18},{l:'1 600',t:'amt',v:1600,w:12},{l:'Dommage',t:'none',w:16},{l:'9 500',t:'amt',v:9500,w:4,big:1},{l:'Prêt soldé',t:'solde',w:2},{l:'600',t:'amt',v:600,w:14}];
-const SEGC=[['#0F3D28','#3DD18C'],['#1C1516','#3DD18C'],['#3DD18C','#05130C'],['#16593A','#FFFFFF'],['#1C1516','#3DD18C'],['#FFC928','#1F1600'],['#36D088','#FFFFFF'],['#16593A','#FFFFFF']];
+const SEGS=[{l:'iPhone 17',t:'phone',w:0},{l:'Dommage',t:'none',w:19},{l:'Dommage',t:'none',w:19},{l:'Dommage',t:'none',w:19},{l:'Dommage',t:'none',w:18},{l:'9 500',t:'amt',v:9500,w:4,big:1},{l:'Prêt soldé',t:'solde',w:2},{l:'Dommage',t:'none',w:19}];
+const SEGC=[['#4A4F4D','#B9C0BD'],['#0A422C','#8ECE9D'],['#141917','#8ECE9D'],['#0A422C','#8ECE9D'],['#141917','#8ECE9D'],['#FFC928','#1F1600'],['#1A7F52','#FFFFFF'],['#141917','#8ECE9D']];
 function wheelSvg(){const R=136,pt=a=>[Math.cos(a)*R,Math.sin(a)*R].map(v=>v.toFixed(1)).join(' ');
-const seg=SEGS.map((g,k)=>{const a0=(k*45-112.5)*Math.PI/180,a1=(k*45-67.5)*Math.PI/180,[bg,fg]=SEGC[k];const two=g.t==='amt'||g.t==='solde';const l1=g.t==='solde'?'Prêt':g.l,l2=g.t==='solde'?'soldé':g.big?'GROS LOT':'FC';
-return`<path d="M0 0L${pt(a0)}A${R} ${R} 0 0 1 ${pt(a1)}Z" fill="${bg}"/><g transform="rotate(${k*45})" fill="${fg}" text-anchor="middle">${two?`<text y="-96" font-size="${g.t==='solde'?17:22}" font-weight="800">${l1}</text><text y="-74" font-size="${g.t==='solde'?17:g.big?12:14}" font-weight="700">${l2}</text>`:`<text y="-88" font-size="15" font-weight="800">${g.l}</text>`}</g>`}).join('');
+const seg=SEGS.map((g,k)=>{const a0=(k*45-112.5)*Math.PI/180,a1=(k*45-67.5)*Math.PI/180,[bg,fg]=SEGC[k];const two=g.t==='amt'||g.t==='solde'||g.t==='phone';const l1=g.t==='solde'?'Prêt':g.t==='phone'?'iPhone':g.l,l2=g.t==='solde'?'soldé':g.t==='phone'?'17':g.big?'GROS LOT':'FC';
+return`<path d="M0 0L${pt(a0)}A${R} ${R} 0 0 1 ${pt(a1)}Z" fill="${bg}"/><g transform="rotate(${k*45})" fill="${fg}" text-anchor="middle">${two?`<text y="-96" font-size="${g.t==='solde'?17:22}" font-weight="800">${l1}</text><text y="-74" font-size="${g.t==='solde'?17:g.big?12:14}" font-weight="700">${l2}</text>`:`<text y="-92" font-size="13" font-weight="800">${g.l}</text>`}</g>`}).join('');
 const bulbs=Array.from({length:16},(_,k)=>{const a=k*22.5*Math.PI/180;return`<circle class="bulb" style="--k:${k%2}" cx="${(Math.sin(a)*146).toFixed(1)}" cy="${(-Math.cos(a)*146).toFixed(1)}" r="4.6"/>`}).join('');
-return`<svg class="wheel" viewBox="-160 -160 320 320" role="img" aria-label="Roue avec des gains de 600, 1 200 et 1 600 FC, un gros lot de 9 500 FC et un prêt soldé"><defs><linearGradient id="rim" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#543E42"/><stop offset=".5" stop-color="#1A1213"/><stop offset="1" stop-color="#3D2C2F"/></linearGradient></defs><circle r="157" fill="url(#rim)"/><circle r="138" fill="#080506"/><g id="wg" style="transform:rotate(${ui.rot}deg)" font-family="Plus Jakarta Sans,sans-serif">${seg}</g>${bulbs}</svg>`}
-function prize(g){if(g.t==='none')return'Pas de chance cette fois.';
+return`<svg class="wheel" viewBox="-160 -160 320 320" role="img" aria-label="Roue avec un iPhone 17 (bientôt), un gros lot de 9 500 FC, un prêt soldé et des cases Dommage"><defs><linearGradient id="rim" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#543E42"/><stop offset=".5" stop-color="#1A1213"/><stop offset="1" stop-color="#3D2C2F"/></linearGradient></defs><circle r="157" fill="url(#rim)"/><circle r="138" fill="#080506"/><g id="wg" style="transform:rotate(${ui.rot}deg)" font-family="Plus Jakarta Sans,sans-serif">${seg}</g>${bulbs}</svg>`}
+function prize(g){if(g.t==='none'||g.t==='phone')return'Pas de chance cette fois.';
 if(S.loan){const L=S.loan,rest=L.total-L.paid;if(g.t==='solde'){L.paid=L.total;S.won=(S.won||0)+rest;addH('Roue · prêt soldé',rest,0);S.loan=null;return`Votre prêt est soldé ! ${fc(rest)} remboursés par la roue.`}
 const v=Math.min(g.v,rest);L.paid+=v;S.won=(S.won||0)+v;addH('Roue · remboursement',v,0);if(L.paid>=L.total){S.loan=null;return`${fc(v)} remboursés : votre prêt est soldé !`}return`${fc(v)} remboursés automatiquement. Il reste ${fc(L.total-L.paid)}.`}
 if(g.t==='solde'){S.free=true;return'Votre prochain prêt sera soldé automatiquement par la roue.'}
@@ -716,7 +729,8 @@ function optsHtml(){const a=ui.amt||0;return DURS.map(([w,r])=>{const t=a+Math.c
 function payBox(){const o=OPS.find(x=>x.id===ui.op),c=(CFG[ui.op]||{});
 if(!c.num)return`<div class="card" id="paybox"><b>Numéro ${o.n} à venir</b><p style="font-size:14px;color:var(--mute)">${OWNER?"Ajoutez votre numéro dans l'Espace administrateur pour que vos clients sachent où envoyer leur dépôt.":"Ce moyen de paiement n'est pas encore disponible. Choisissez-en un autre."}</p>${OWNER?`<button class="btn sm alt" data-go="admin">Ajouter mes numéros</button>`:''}</div>`;
 return`<div class="card paybox" id="paybox"><span class="lbl">Envoyez le montant par ${o.n} au :</span><div class="sp" style="align-items:center"><div><b class="num" style="font-size:24px;white-space:nowrap">${esc(c.num)}</b><small style="display:block;color:var(--mute)">${esc(c.name||'Bank Lambert')}</small></div><button class="btn sm alt" data-act="copy" data-v="${esc(c.num)}" style="width:auto;padding:0 16px">Copier</button></div>
-<label class="field">Référence de la transaction (facultatif)<input id="dep-ref" autocomplete="off" placeholder="Ex. : MP231123.1452.A1"></label></div>`}
+${ui.screen==='deposit'?proofBox():`<label class="field">Référence de la transaction (facultatif)<input id="dep-ref" autocomplete="off" placeholder="Ex. : MP231123.1452.A1"></label>`}</div>`}
+function proofBox(){const p=ui.proof||{};return`<div class="proof"><b>Capture d'écran du dépôt</b><small>Envoyez la capture du message de confirmation ${'Mobile Money'}. Elle aide Bank Lambert à valider plus vite.</small>${p.url?`<img src="${p.url}" alt="Capture du dépôt">`:''}<small class="pst">${p.busy?'Envoi de la capture…':p.path?'✓ Capture enregistrée':p.err?esc(p.err):''}</small><div class="kbtns"><label class="kb">🖼️ ${p.url?'Changer la capture':'Choisir la capture'}<input id="dep-proof" type="file" accept="image/*" class="sr"></label></div></div>`}
 const hm=n=>PREF.hide?'••••• FC':fc(n);
 function chartSvg(pts){const W=340,Hh=160,n=pts.length,mx=Math.max(...pts,1),P=pts.map((v,i)=>[i/(n-1)*W,Hh-12-v/mx*(Hh-34)]);let d=`M${P[0][0]} ${P[0][1]}`;
 for(let i=1;i<n;i++){const[x0,y0]=P[i-1],[x1,y1]=P[i],cx=(x0+x1)/2;d+=`C${cx} ${y0} ${cx} ${y1} ${x1} ${y1}`}const L=P[n-1];
@@ -854,7 +868,7 @@ ${r?r.win?`<div class="congrats" role="status"><span class="rl">Félicitations !
 <div class="gpanel"><span class="gtab">${ic('coin',24)}</span>
 <div class="g2"><div class="mini"><small>Essais restants</small><b>${sp}</b></div><div class="mini"><small>Gains totaux</small><b>${fc(S.won||0)}</b></div></div>
 ${S.loan?`<div class="note">${ic('coin',20)}<span>Prêt en cours : il reste <b>${fc(S.loan.total-S.loan.paid)}</b> à rembourser.</span></div>`:`<div class="note">${ic('coin',20)}<span>Pas de prêt en cours : vos gains sont gardés pour votre prochain prêt.</span></div>`}
-<p style="font-size:14px;color:var(--mute)">Chaque dépôt vous offre 2 essais. Gains : 600, 1 200 ou 1 600 FC, le gros lot de 9 500 FC, ou « Prêt soldé ».</p>
+<p style="font-size:14px;color:var(--mute)">Chaque dépôt vous offre 2 essais. L'iPhone 17 (case grise) arrive bientôt. Gains possibles : le gros lot de 9 500 FC, ou « Prêt soldé ».</p>
 ${sp?'':`<button class="btn" data-go="deposit">Déposer pour gagner 2 essais</button>`}${OWNER?`<button class="btn alt sm" data-act="moreSpins">Ajouter 2 essais (test administrateur)</button>`:''}
 </div></section>`},
 
@@ -884,7 +898,7 @@ ${sec('Identités acceptées',ok.length)}${ok.length?ok.map(a=>ccard(a,`<small s
 ${ko.length?sec('Identités refusées',ko.length)+ko.map(a=>ccard(a,`<small style="color:var(--err)">Refusée${a.kyc_note?' : '+esc(a.kyc_note):''}</small>`)).join(''):''}
 ${no.length?sec('Sans photos',no.length)+`<div class="list">${no.map(a=>`<div class="li"><span class="hic2">${esc(String(a.name||'?')[0].toUpperCase())}</span><div><b>${esc(a.name)}</b><small>${esc(a.phone)}</small>${cts(a)}</div></div>`).join('')}</div>`:''}`}
 else if(at==='dep'){const okd=D.depAll.filter(d=>d.status==='valide'),by={};okd.forEach(d=>{(by[d.uid]=by[d.uid]||{t:0,c:0,last:d.created_at}).t+=n(d.amount);by[d.uid].c++});const ds=Object.keys(by).map(u=>[who(u),by[u]]).sort((x,y)=>y[1].t-x[1].t);
-body=`${sec('Dépôts à valider',D.dep.length)}${D.dep.length?D.dep.map(d=>{const a=who(d.uid);return row(d.uid,fc(n(d.amount)),`${cts(a)}${opName(d.op)} · ${fdate(d.created_at)}${d.ref?' · réf. '+esc(d.ref):''}<br>Vérifiez que l'argent est bien arrivé sur votre compte ${opName(d.op)}.<small style="display:block">Épargne actuelle : ${fc(n(a.savings))}</small>`,d.id,'dep','Reçu, valider')}).join(''):'<div class="list empty">Aucun dépôt en attente.</div>'}
+body=`${sec('Dépôts à valider',D.dep.length)}${D.dep.length?D.dep.map(d=>{const a=who(d.uid);return row(d.uid,fc(n(d.amount)),`${cts(a)}${opName(d.op)} · ${fdate(d.created_at)}${d.ref?' · réf. '+esc(d.ref):''}<br>Vérifiez que l'argent est bien arrivé sur votre compte ${opName(d.op)}.<small style="display:block">Épargne actuelle : ${fc(n(a.savings))}</small>${d.proof&&D.urls['proof:'+d.proof]?`<button class="kimg" data-act="zoom" data-src="${esc(D.urls['proof:'+d.proof])}" aria-label="Agrandir la capture" style="max-width:180px"><img src="${esc(D.urls['proof:'+d.proof])}" alt="Capture du dépôt"><span>Capture du dépôt</span></button>`:'<small style="display:block">Pas de capture envoyée.</small>'}`,d.id,'dep','Reçu, valider')}).join(''):'<div class="list empty">Aucun dépôt en attente.</div>'}
 ${sec('Clients qui ont déposé',ds.length)}${ds.length?`<div class="list">${ds.map(([a,x])=>`<div class="li"><span class="hic2">${esc(String(a.name||'?')[0].toUpperCase())}</span><div><b>${esc(a.name)}</b><small>${esc(a.phone)} · ${x.c} dépôt${x.c>1?'s':''} · dernier ${fdate(x.last)}</small>${cts(a)}</div><span class="v plus">${fc(n(a.savings))}</span></div>`).join('')}</div>`:'<div class="list empty">Aucun dépôt validé pour l\'instant.</div>'}`}
 else if(at==='pret'){const act=D.loans.filter(l=>l.status==='en_cours');
 body=`${sec('Demandes de prêt à valider',lq.length)}${lq.length?lq.map(l=>{const a=who(l.uid);return row(l.uid,fc(n(l.amount)),`${cts(a)}${dur(l.weeks)} · à rembourser ${fc(n(l.total))} · ${esc(l.motif)}<br>Épargne : ${fc(n(a.savings))}<br><b style="color:${a.kyc_status==='valide'?'var(--lk)':'var(--err)'}">${KL[a.kyc_status]||''}</b>${pics(l.uid)}${a.kyc_status==='valide'?`Envoyez l'argent sur son ${opName(l.op)} au <b>${esc(l.payout_phone||a.phone)}</b>, puis validez.`:'Validez d\'abord son identité dans l\'onglet Identités.'}`,l.id,'loan',"Argent envoyé")}).join(''):'<div class="list empty">Aucune demande en attente.</div>'}
@@ -1003,7 +1017,7 @@ let r;try{r=await rpc('bl_spin')}catch(e){ui.spinning=false;ui.res={l:'Oups',m:e
 const idx=r.idx,rm=matchMedia('(prefers-reduced-motion: reduce)').matches,cur=ui.rot,want=(360-idx*45)%360;ui.rot=cur-((cur%360)+360)%360+360*6+want+(Math.random()-.5)*28;
 $.querySelector('.wheelbox').classList.add('spinning');requestAnimationFrame(()=>requestAnimationFrame(()=>{$.querySelector('#wg').style.transform=`rotate(${ui.rot}deg)`}));
 setTimeout(async()=>{await load().catch(()=>{});ui.spinning=false;const g=SEGS[idx];ui.res={l:g.big?'Gros lot · 9 500 FC':g.t==='amt'?g.l+' FC':g.l,m:esc(String(r.msg).replace(/\d{4,}/g,x=>num(+x))),win:!!r.win,fresh:1};render(true);ui.res.fresh=0},rm?60:5300)},
-doDeposit:()=>{const d=ui.dep;if(d<MIN||!(CFG[ui.op]||{}).num)return;const ref=($.querySelector('#dep-ref')||{}).value||'';process('Envoi de votre dépôt…',async()=>{await rpc('bl_request_deposit',{p_amount:d,p_op:ui.op,p_ref:ref});await load();return{t:'Dépôt envoyé',m:`Nous vérifions la réception de ${fc(d)}. Dès que c'est confirmé, votre épargne augmente et vous gagnez 2 essais à la roue.`}})},
+doDeposit:()=>{const d=ui.dep;if(d<MIN||!(CFG[ui.op]||{}).num)return;if(ui.proof&&ui.proof.busy)return;const ref=($.querySelector('#dep-ref')||{}).value||'',pf=(ui.proof&&ui.proof.path)||'';process('Envoi de votre dépôt…',async()=>{await rpc('bl_request_deposit',{p_amount:d,p_op:ui.op,p_ref:ref,p_proof:pf});ui.proof=null;await load();return{t:'Dépôt envoyé',m:`Nous vérifions la réception de ${fc(d)}. Dès que c'est confirmé, votre épargne augmente et vous gagnez 2 essais à la roue.`}})},
 doBorrow:()=>{const a=ui.amt,w=ui.weeks;if(!(a>=MIN&&a<=ceil()))return;const pay=digits(ui.pay!=null?ui.pay:S.user.phone).replace(/^243/,'').replace(/^0/,'');if(!/^[89]\d{8}$/.test(pay)){const e=$.querySelector('#b-err');if(e)e.textContent='Le numéro qui reçoit l\'argent doit avoir 9 chiffres, par exemple 81 234 5678.';$.querySelector('#b-pay')?.focus();return}process('Envoi de votre demande…',async()=>{await rpc('bl_request_loan',{p_amount:a,p_weeks:w,p_motif:ui.motif,p_op:ui.op,p_payout:P243(pay)});ui.amt=null;await load();return{t:'Demande envoyée',m:`Bank Lambert examine votre demande de ${fc(a)}. Dès qu'elle est acceptée, l'argent est envoyé sur votre ${opName(ui.op)}.`}})},
 doRepay:()=>{const L=S.loan;if(!L)return;const pend=S.rpend.reduce((x,r)=>x+(+r.amount),0),due=Math.min(L.inst,L.total-L.paid-pend);if(due<=0)return;const ref=($.querySelector('#dep-ref')||{}).value||'';
 process('Envoi du paiement…',async()=>{await rpc('bl_request_repay',{p_amount:due,p_op:ui.op,p_ref:ref});await load();return{t:'Paiement envoyé',m:`Nous vérifions la réception de ${fc(due)}. Votre prêt sera mis à jour dès la confirmation.`}})},
@@ -1024,6 +1038,7 @@ if(e.target.id==='dep-in'){const v=parseInt(e.target.value.replace(/\D/g,''))||0
 $.querySelector('#dep-ceil').textContent=fc((S.savings+v)*MULT);$.querySelector('#dep-tot').textContent=fc(S.savings+v);const b=$.querySelector('#dep-btn');b.textContent="J'ai envoyé "+fc(v);b.disabled=v<MIN}
 if(e.target.id==='rng'){ui.amt=+e.target.value;$.querySelector('#b-amt').textContent=fc(ui.amt);$.querySelector('#b-sum').innerHTML=sumHtml()}});
 document.addEventListener('change',e=>{if(e.target.id==='motif')ui.motif=e.target.value;
+if(e.target.id==='dep-proof'){const f=e.target.files&&e.target.files[0];e.target.value='';if(!f)return;ui.proof={busy:1};render(true);shrink(f).then(async b=>{const path=UID+'/'+Date.now()+'.jpg';ui.proof={url:URL.createObjectURL(b)};try{const{error}=await sb.storage.from('bl-proofs').upload(path,b,{contentType:'image/jpeg'});if(error)throw error;ui.proof.path=path}catch(er){ui.proof.err="La capture n'a pas pu être envoyée. Réessayez."}render(true)},()=>{ui.proof={err:'Image illisible. Choisissez une autre capture.'};render(true)});return}
 if(/^ky[cg]-(selfie|piece)$/.test(e.target.id)){const f=e.target.files&&e.target.files[0],k=e.target.id.slice(4);e.target.value='';if(!f)return;ui.kerr='';ui.kf=ui.kf||{};ui.kf[k+'Busy']=1;render(true);shrink(f).then(async b=>{if(ui.kf[k+'Url'])URL.revokeObjectURL(ui.kf[k+'Url']);ui.kf[k]=b;ui.kf[k+'Url']=URL.createObjectURL(b);try{await kycUp(k,b);ui.kf[k+'Up']=true}catch(er){}ui.kf[k+'Busy']=0;render(true)},er=>{ui.kf[k+'Busy']=0;ui.kerr=(er&&er.message)||'Impossible de lire cette photo. Choisissez « Galerie ».';render(true)})}});
 document.addEventListener('submit',async e=>{const id=e.target.id;if(id!=='f-sign'&&id!=='f-login')return;e.preventDefault();if(ui.busy)return;const fd=new FormData(e.target);
 const phone=(fd.get('phone')||'').replace(/\D/g,'').replace(/^243/,'').replace(/^0/,''),pin=String(fd.get('pin')||'');
