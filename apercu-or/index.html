@@ -840,7 +840,19 @@ const el=$.querySelector('[data-count]');
 if(el){const to=+el.dataset.count,from=ui.shown,t0=performance.now(),rm=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const step=t=>{const p=rm?1:Math.min(1,(t-t0)/700),v=from+(to-from)*(1-Math.pow(1-p,3));el.textContent=fc(v);if(p<1)requestAnimationFrame(step)};requestAnimationFrame(step);ui.shown=to}
 }
-function go(s){let note='';if(ui.guest&&['deposit','borrow','repay'].includes(s)){note='Créez votre compte pour déposer et emprunter.';s='signup'}
+const NAV={stack:[],exitAt:0};
+function go(s,fromBack){if(!fromBack&&s!==ui.screen&&ui.screen){if(['home','welcome'].includes(s))NAV.stack=[];else{const i=NAV.stack.lastIndexOf(s);if(i>=0)NAV.stack.length=i;else NAV.stack.push(ui.screen)}}else if(fromBack&&['home','welcome'].includes(s))NAV.stack=[];
+_go(s)}
+try{history.replaceState({bl:'base'},'');history.pushState({bl:'guard'},'')}catch(e){}
+addEventListener('popstate',()=>{const keep=()=>{try{history.pushState({bl:'guard'},'')}catch(e){}};
+ const ov=document.querySelector('.ov');if(ov){if(!ui.spinning&&!document.querySelector('.ov .spin'))ov.remove();keep();return}
+ if(ui.spinning){keep();return}
+ if(NAV.stack.length){keep();go(NAV.stack.pop(),true);return}
+ const root=ui.screen==='home'||ui.screen==='welcome'||!ui.screen;
+ if(!root){keep();go(S.user&&!ui.guest?'home':'welcome',true);return}
+ if(Date.now()-NAV.exitAt<2500){history.back();return}
+ NAV.exitAt=Date.now();keep();try{toast('Appuyez encore pour quitter','Bank Lambert')}catch(e){}});
+function _go(s){let note='';if(ui.guest&&['deposit','borrow','repay'].includes(s)){note='Créez votre compte pour déposer et emprunter.';s='signup'}
 if(s==='signup'&&ui.guest){ui.guest=false;S=fresh();ui.shown=0}
 if(s==='admin'){ui.ad=null;loadAdmin().then(()=>{if(ui.screen==='admin')render(true)})}
 if(['home','deposit','borrow','repay','jeu','history','profile'].includes(s)&&!S.user)s='welcome';ui.note=note;ui.screen=s;ui.err='';ui.reset=false;if(s==='deposit'&&S.loan===undefined)S.loan=null;render();scrollTo(0,0)}
