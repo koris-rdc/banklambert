@@ -730,6 +730,7 @@ function payBox(){const o=OPS.find(x=>x.id===ui.op),c=(CFG[ui.op]||{});
 if(!c.num)return`<div class="card" id="paybox"><b>Numéro ${o.n} à venir</b><p style="font-size:14px;color:var(--mute)">${OWNER?"Ajoutez votre numéro dans l'Espace administrateur pour que vos clients sachent où envoyer leur dépôt.":"Ce moyen de paiement n'est pas encore disponible. Choisissez-en un autre."}</p>${OWNER?`<button class="btn sm alt" data-go="admin">Ajouter mes numéros</button>`:''}</div>`;
 return`<div class="card paybox" id="paybox"><span class="lbl">Envoyez le montant par ${o.n} au :</span><div class="sp" style="align-items:center"><div><b class="num" style="font-size:24px;white-space:nowrap">${esc(c.num)}</b><small style="display:block;color:var(--mute)">${esc(c.name||'Bank Lambert')}</small></div><button class="btn sm alt" data-act="copy" data-v="${esc(c.num)}" style="width:auto;padding:0 16px">Copier</button></div>
 ${ui.screen==='deposit'?proofBox():`<label class="field">Référence de la transaction (facultatif)<input id="dep-ref" autocomplete="off" placeholder="Ex. : MP231123.1452.A1"></label>`}</div>`}
+function giftTxt(d){return d>=10000?'2 essais à la roue · chance de gagner un iPhone 17':'2 essais à la roue · iPhone 17 dès 10 000 FC'}
 function proofBox(){const p=ui.proof||{};return`<div class="proof"><b>Capture d'écran du dépôt</b><small>Envoyez la capture du message de confirmation ${'Mobile Money'}. Elle aide Bank Lambert à valider plus vite.</small>${p.url?`<img src="${p.url}" alt="Capture du dépôt">`:''}<small class="pst">${p.busy?'Envoi de la capture…':p.path?'✓ Capture enregistrée':p.err?esc(p.err):''}</small><div class="kbtns"><label class="kb">🖼️ ${p.url?'Changer la capture':'Choisir la capture'}<input id="dep-proof" type="file" accept="image/*" class="sr"></label></div></div>`}
 const hm=n=>PREF.hide?'••••• FC':fc(n);
 function chartSvg(pts){const W=340,Hh=160,n=pts.length,mx=Math.max(...pts,1),P=pts.map((v,i)=>[i/(n-1)*W,Hh-12-v/mx*(Hh-34)]);let d=`M${P[0][0]} ${P[0][1]}`;
@@ -812,7 +813,7 @@ deposit:()=>{const d=ui.dep;return`<section class="scr${ui.onboard?'':' nav-pad'
 <h1>${ui.onboard?'Votre premier':'Combien voulez-vous'} <em>${ui.onboard?'dépôt':'déposer'}</em>${ui.onboard?'':' ?'}</h1>
 <label class="amt-box"><span class="sr">Montant du dépôt en francs congolais</span><input id="dep-in" inputmode="numeric" autocomplete="off" value="${d?num(d):''}" placeholder="0"><span class="cur">FC</span></label>
 <div class="quick">${[5000,10000,25000,50000].map(a=>`<button class="chip q" data-act="dep" data-v="${a}" aria-pressed="${d===a}">${num(a)}</button>`).join('')}</div>
-<div class="hero on-deep">${LOGO('wmk2')}<small>Votre plafond d'emprunt après ce dépôt</small><span class="big num acc-t" id="dep-ceil">${fc((S.savings+d)*MULT)}</span><span class="m">Épargne totale : <span id="dep-tot">${fc(S.savings+d)}</span> × ${MULT}</span><span class="gift">${ic('wheel',18)} 2 essais à la roue offerts</span></div>
+<div class="hero on-deep">${LOGO('wmk2')}<small>Votre plafond d'emprunt après ce dépôt</small><span class="big num acc-t" id="dep-ceil">${fc((S.savings+d)*MULT)}</span><span class="m">Épargne totale : <span id="dep-tot">${fc(S.savings+d)}</span> × ${MULT}</span><span class="gift">${ic('wheel',18)} <span id="dep-gift">${giftTxt(d)}</span></span></div>
 ${opsGrid('Déposer avec')}
 ${payBox()}
 <button class="btn" data-act="doDeposit" id="dep-btn"${d<MIN||!(CFG[ui.op]||{}).num?' disabled':''}>J'ai envoyé ${fc(d)}</button>
@@ -868,7 +869,7 @@ ${r?r.win?`<div class="congrats" role="status"><span class="rl">Félicitations !
 <div class="gpanel"><span class="gtab">${ic('coin',24)}</span>
 <div class="g2"><div class="mini"><small>Essais restants</small><b>${sp}</b></div><div class="mini"><small>Gains totaux</small><b>${fc(S.won||0)}</b></div></div>
 ${S.loan?`<div class="note">${ic('coin',20)}<span>Prêt en cours : il reste <b>${fc(S.loan.total-S.loan.paid)}</b> à rembourser.</span></div>`:`<div class="note">${ic('coin',20)}<span>Pas de prêt en cours : vos gains sont gardés pour votre prochain prêt.</span></div>`}
-<p style="font-size:14px;color:var(--mute)">Chaque dépôt vous offre 2 essais. Gains possibles : 250, 550 ou 750 FC, un iPhone 17, le gros lot de 9 500 FC, ou « Prêt soldé ».</p>
+<p style="font-size:14px;color:var(--mute)">Chaque dépôt vous offre 2 essais. L'iPhone 17 se gagne seulement après un dépôt d'au moins 10 000 FC. Gains possibles : 250, 550 ou 750 FC, un iPhone 17, le gros lot de 9 500 FC, ou « Prêt soldé ».</p>
 ${sp?'':`<button class="btn" data-go="deposit">Déposer pour gagner 2 essais</button>`}${OWNER?`<button class="btn alt sm" data-act="moreSpins">Ajouter 2 essais (test administrateur)</button>`:''}
 </div></section>`},
 
@@ -1036,7 +1037,7 @@ document.addEventListener('input',e=>{
 if(e.target.id==='b-pay'){ui.pay=e.target.value;return}
 if(e.target.id==='b-in'){const v=parseInt(e.target.value.replace(/\D/g,''))||0,c=ceil(),ok=v>=MIN&&v<=c;ui.amt=v;$.querySelector('#b-opts').innerHTML=optsHtml();const b=$.querySelector('#b-btn');b.disabled=!ok;b.textContent='Recevoir '+fc(v);$.querySelector('#b-err').textContent=v>c?`Votre plafond est de ${fc(c)}.`:v&&v<MIN?`Minimum ${fc(MIN)}.`:'';$.querySelector('#b-gar').textContent=fc(Math.min(S.savings,v/MULT))}
 if(e.target.id==='dep-in'){const v=parseInt(e.target.value.replace(/\D/g,''))||0;ui.dep=v;$.querySelectorAll('[data-act=dep]').forEach(c=>c.setAttribute('aria-pressed',+c.dataset.v===v));
-$.querySelector('#dep-ceil').textContent=fc((S.savings+v)*MULT);$.querySelector('#dep-tot').textContent=fc(S.savings+v);const b=$.querySelector('#dep-btn');b.textContent="J'ai envoyé "+fc(v);b.disabled=v<MIN}
+$.querySelector('#dep-ceil').textContent=fc((S.savings+v)*MULT);$.querySelector('#dep-tot').textContent=fc(S.savings+v);{const g=$.querySelector('#dep-gift');if(g)g.textContent=giftTxt(v)}const b=$.querySelector('#dep-btn');b.textContent="J'ai envoyé "+fc(v);b.disabled=v<MIN}
 if(e.target.id==='rng'){ui.amt=+e.target.value;$.querySelector('#b-amt').textContent=fc(ui.amt);$.querySelector('#b-sum').innerHTML=sumHtml()}});
 document.addEventListener('change',e=>{if(e.target.id==='motif')ui.motif=e.target.value;
 if(e.target.id==='dep-proof'){const f=e.target.files&&e.target.files[0];e.target.value='';if(!f)return;ui.proof={busy:1};render(true);shrink(f).then(async b=>{const path=UID+'/'+Date.now()+'.jpg';ui.proof={url:URL.createObjectURL(b)};try{const{error}=await sb.storage.from('bl-proofs').upload(path,b,{contentType:'image/jpeg'});if(error)throw error;ui.proof.path=path}catch(er){ui.proof.err="La capture n'a pas pu être envoyée. Réessayez."}render(true)},()=>{ui.proof={err:'Image illisible. Choisissez une autre capture.'};render(true)});return}
